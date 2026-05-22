@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SmartQuizApplication<smart_quiz>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.techtechnicworld.smart_quiz.SmartQuizApplication",
+            "projectName": "smart_quiz",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

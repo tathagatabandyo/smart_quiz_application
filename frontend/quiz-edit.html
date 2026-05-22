@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Quiz - Smart Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.html">Smart Quiz</a>
+            <div class="d-flex align-items-center">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm me-2">← Back to Dashboard</a>
+                <span class="navbar-text me-3" id="userName"></span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="errorAlert" class="alert alert-danger d-none"></div>
+        <div id="successAlert" class="alert alert-success d-none"></div>
+
+        <!-- Quiz Details Card -->
+        <div class="quiz-detail-card">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 id="quizTitle">Loading...</h2>
+                    <p class="text-muted" id="quizDescription"></p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span id="quizStatusBadge" class="status-badge">Draft</span>
+                    <button class="btn btn-success" id="publishBtn" onclick="togglePublish()">Publish</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Time Per Question</label>
+                        <p id="quizTime">30 seconds</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Total Questions</label>
+                        <p id="quizQuestions">0</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Created By</label>
+                        <p id="quizCreatedBy">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editQuizModal">Edit Quiz Details</button>
+                <button class="btn btn-danger" onclick="confirmDeleteQuiz()">Delete Quiz</button>
+            </div>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="quiz-detail-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">Questions</h4>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#questionModal" onclick="openAddQuestion()">
+                    + Add Question
+                </button>
+            </div>
+
+            <div id="questionsList"></div>
+            <div id="noQuestionsMsg" class="text-center text-muted py-5 d-none">
+                <p class="mb-0">No questions added yet. Click "+ Add Question" to add one.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Quiz Modal -->
+    <div class="modal fade" id="editQuizModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Quiz</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editQuizForm">
+                        <input type="hidden" id="editQuizId">
+                        <div class="mb-3">
+                            <label class="form-label">Quiz Title</label>
+                            <input type="text" class="form-control" id="editQuizTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editQuizDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time Per Question (seconds)</label>
+                            <input type="number" class="form-control" id="editQuizTime" min="5" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editQuizStatus">
+                                <option value="DRAFT">Draft</option>
+                                <option value="PUBLISHED">Published</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Update Quiz</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Question Modal -->
+    <div class="modal fade" id="questionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="questionModalTitle">Add Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="questionForm">
+                        <input type="hidden" id="questionQuizId">
+                        <input type="hidden" id="editQuestionId">
+                        <div class="mb-3">
+                            <label class="form-label">Question Text</label>
+                            <textarea class="form-control" id="questionText" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Question Order</label>
+                            <input type="number" class="form-control" id="questionOrder" value="1" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Correct Option(s)</label>
+                            <div class="d-flex gap-3" id="correctOptionsContainer">
+                                <div class="form-check">
+                                    <input class="form-check-input correct-option" type="checkbox" value="A" id="correctA">
+                                    <label class="form-check-label" for="correctA">A</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input correct-option" type="checkbox" value="B" id="correctB">
+                                    <label class="form-check-label" for="correctB">B</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input correct-option" type="checkbox" value="C" id="correctC">
+                                    <label class="form-check-label" for="correctC">C</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input correct-option" type="checkbox" value="D" id="correctD">
+                                    <label class="form-check-label" for="correctD">D</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input correct-option" type="checkbox" value="E" id="correctE">
+                                    <label class="form-check-label" for="correctE">E</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input correct-option" type="checkbox" value="F" id="correctF">
+                                    <label class="form-check-label" for="correctF">F</label>
+                                </div>
+                            </div>
+                            <small class="text-muted">Select one or more correct answers</small>
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addOption()">+ Add Option</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOption()">- Remove Option</button>
+                        </div>
+                        <hr>
+                        <h6>Options</h6>
+                        <div id="optionsContainer">
+                            <div class="option-item d-flex align-items-center gap-2 mb-2">
+                                <span class="option-letter fw-bold text-primary" style="width: 24px;">A</span>
+                                <input type="hidden" class="option-id" value="">
+                                <input type="text" class="form-control option-text" placeholder="Option A text" required>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-btn" onclick="removeOption(this)" title="Remove">✕</button>
+                            </div>
+                            <div class="option-item d-flex align-items-center gap-2 mb-2">
+                                <span class="option-letter fw-bold text-primary" style="width: 24px;">B</span>
+                                <input type="hidden" class="option-id" value="">
+                                <input type="text" class="form-control option-text" placeholder="Option B text" required>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-btn" onclick="removeOption(this)" title="Remove">✕</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3" id="questionSubmitBtn">Add Question</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/quiz-edit.js"></script>
+</body>
+</html>

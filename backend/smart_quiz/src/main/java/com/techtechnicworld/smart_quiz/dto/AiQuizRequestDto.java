@@ -26,5 +26,5 @@ public class AiQuizRequestDto {
     @NotBlank(message = "Prompt/topic is required")
     private String prompt;
 
-    private String model; // defaults to deepseek-chat
+    private String model; // defaults to deepseek-v4-flash
 }

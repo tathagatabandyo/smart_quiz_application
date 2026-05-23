@@ -85,7 +85,11 @@ public class AiQuizService {
                     .call()
                     .entity(new ParameterizedTypeReference<List<QuestionData>>() {});
 
-            log.debug("AI response received: {} questions", questions.size());
+            log.info("AI response received: {} questions for topic: {}", questions != null ? questions.size() : 0, request.getPrompt());
+
+            if (questions == null || questions.isEmpty()) {
+                throw new RuntimeException("AI returned no questions. Please try again with a different prompt or model.");
+            }
 
             Quiz quiz = new Quiz();
             quiz.setTitle(request.getTitle());
@@ -99,10 +103,7 @@ public class AiQuizService {
             quiz.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
             quiz.setQuestions(new ArrayList<>());
 
-            quiz = quizRepository.save(quiz);
-
-            // Build all questions with their options (generate uniqueInsertId for each option)
-            List<Question> questionEntities = new ArrayList<>();
+            // Build all questions with their options and add them to the quiz
             for (QuestionData qd : questions) {
                 Question question = new Question();
                 question.setQuestionText(qd.questionText());
@@ -123,15 +124,15 @@ public class AiQuizService {
                     option.setQuestion(question);
                     question.getOptions().add(option);
                 }
-                questionEntities.add(question);
+                quiz.getQuestions().add(question);
             }
 
-            // Batch save all questions (options saved via cascade)
-            questionRepository.saveAll(questionEntities);
+            // Save quiz with cascade - this saves questions and options in one go
+            quiz = quizRepository.save(quiz);
 
-            // Map correct option keys to option IDs using uniqueInsertId
-            for (int i = 0; i < questionEntities.size(); i++) {
-                Question question = questionEntities.get(i);
+            // Now options have generated IDs. Map correct option keys to option IDs using uniqueInsertId
+            for (int i = 0; i < quiz.getQuestions().size(); i++) {
+                Question question = quiz.getQuestions().get(i);
                 QuestionData qd = questions.get(i);
 
                 if (qd.correctOptionKeys() != null && !qd.correctOptionKeys().isEmpty()) {
@@ -162,15 +163,15 @@ public class AiQuizService {
                     question.setCorrectOptionIdsList(correctIds);
                 }
             }
-            questionRepository.saveAll(questionEntities);
 
-            quiz = quizRepository.findById(quiz.getId()).orElse(quiz);
+            // Cascade persist will handle the updates to correctOptionIds
+            quiz = quizRepository.save(quiz);
 
             return toQuizResponseDto(quiz);
 
         } catch (Exception e) {
             log.error("Failed to generate quiz with AI", e);
-            throw new RuntimeException("Failed to generate quiz with AI: " + e.getMessage());
+            throw new RuntimeException("Failed to generate quiz with AI: " + e.getMessage(), e);
         }
     }
 
